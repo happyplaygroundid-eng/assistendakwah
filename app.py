@@ -17,13 +17,6 @@ st.markdown("""
     .subtitle { font-family: 'Poppins', sans-serif; font-size: 1rem; text-align: center; margin-bottom: 30px; color: #558B2F; }
     label { font-family: 'Poppins', sans-serif !important; color: #33691E !important; font-weight: 600 !important; }
 
-    /* Input Fields Modification */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {
-        background-color: #FAFAFA !important; 
-        color: #000000 !important;
-        border-radius: 8px !important;
-    }
-
     /* Buttons */
     .stButton>button {
         font-family: 'Poppins', sans-serif !important; font-weight: 600 !important;
@@ -47,7 +40,7 @@ st.markdown("""
     .arab-text { 
         font-family: 'Amiri', serif; font-size: 1.8rem; direction: rtl; 
         color: #1B5E20; line-height: 2.2; margin: 20px 0; display: block; text-align: right;
-        background-color: #F9FBE7; padding: 10px 20px; border-radius: 10px; /* Sedikit highlight biar jelas */
+        background-color: #F9FBE7; padding: 15px 20px; border-radius: 10px; border-right: 4px solid #33691E;
     }
     
     /* Disclaimer Box */
@@ -69,8 +62,8 @@ try:
 except:
     api_key = st.text_input("Masukkan API Key Groq Anda:", type="password")
 
-# --- 5. INPUT FORM (FIX: MENGGUNAKAN CONTAINER ASLI) ---
-with st.container(border=True): # Ini pengganti div manual tadi, otomatis bikin kotak rapi
+# --- 5. INPUT FORM ---
+with st.container(border=True): 
     tema = st.text_input("📝 Tema Dakwah / Topik", placeholder="Contoh: Sabar Menghadapi Ujian, Keutamaan Sedekah Subuh...")
     
     col1, col2 = st.columns(2)
@@ -92,45 +85,60 @@ if st.button("✨ BUAT NASKAH LENGKAP ✨"):
     else:
         try:
             client = Groq(api_key=api_key)
-            with st.spinner('⏳ Sedang membuka kitab & menyusun naskah... (Mohon tunggu sebentar)'):
+            with st.spinner('⏳ Sedang membuka kitab, mencari hadits, & menyusun naskah... (Proses agak lama agar detail)'):
                 
-                # SETTING PROMPT PANJANG
-                min_kata = "800 kata" 
-                struktur_khusus = ""
+                # SETTING STRUKTUR KHUSUS
+                context_length = "PANJANG & MENDALAM"
+                struktur_wajib = ""
                 
                 if "Khutbah Jumat" in format_output:
-                    min_kata = "2000 kata (Sangat Panjang & Detail)"
-                    struktur_khusus = "WAJIB STRUKTUR KHUTBAH JUMAT RESMI: Khutbah Pertama (Materi) -> Duduk Antara Dua Khutbah (Tanda Pemisah) -> Khutbah Kedua (Doa)."
-                elif "Caption" in format_output:
-                    min_kata = "200 kata"
-                    struktur_khusus = "Gaya caption medsos yang engaging."
+                    struktur_wajib = """
+                    WAJIB FORMAT KHUTBAH JUMAT RESMI:
+                    1. KHUTBAH PERTAMA: (Hamdalah, Syahadat, Sholawat, Wasiat Taqwa, Isi Materi Panjang dengan Kisah Rasulullah).
+                    2. DUDUK ANTARA DUA KHUTBAH: (Tuliskan keterangan: [Duduk sejenak]).
+                    3. KHUTBAH KEDUA: (Hamdalah, Sholawat, Wasiat Taqwa, Doa Penutup Lengkap untuk Kaum Muslimin).
+                    """
+                else:
+                    struktur_wajib = "Format Ceramah/Kultum yang mengalir, komunikatif, dan menyentuh hati."
 
+                # SYSTEM PROMPT UPGRADE (OTAK USTADZ BERPENGALAMAN)
                 prompt_system = """
-                Anda adalah Ulama/Ustadz cerdas yang ahli menyusun naskah ceramah.
+                Anda adalah seorang Ustadz Senior yang sangat berpengalaman, berilmu tinggi, namun memiliki gaya penyampaian yang hangat, luwes, dan menyentuh hati (tidak kaku seperti robot). Anda ahli Sirah Nabawiyah (Sejarah Nabi).
                 
-                ATURAN UTAMA:
-                1. DALIL: Setiap mengutip Ayat/Hadits, WAJIB format seperti ini:
-                   <div class='arab-text'>[TEKS ARAB]</div>
-                   **Artinya:** [TERJEMAHAN]
-                   *(HR/QS. [SUMBER])*
+                TUGAS ANDA:
+                Membuat naskah ceramah yang "Hidup" dan "Berbobot".
                 
-                2. KEDALAMAN: Bahas tuntas, jangan kulitnya saja. Berikan contoh nyata kehidupan sehari-hari.
+                ATURAN PENULISAN (WAJIB):
+                1. **GAYA BAHASA:** Gunakan bahasa lisan yang mengalir. Gunakan sapaan akrab (Hadirin rahimakumullah, Saudaraku sekalian, dll). Hindari bahasa buku yang kaku.
+                2. **DALIL ARAB:** Setiap argumen WAJIB didukung Ayat Al-Quran atau Hadits Shahih.
+                   - Format wajib: <div class='arab-text'>[TEKS ARAB]</div>
+                   - Arti: [Terjemahan]
+                   - Sumber: (HR. Bukhari/Muslim/Riwayat siapa atau QS. NamaSurat:Ayat).
+                3. **KISAH RASULULLAH (WAJIB ADA):** Jangan hanya teori! Anda WAJIB menceritakan satu kisah spesifik dari kehidupan Rasulullah SAW atau para Sahabat yang relevan dengan topik ini. Ceritakan dengan detail situasinya, emosinya, dan hikmahnya.
+                4. **CONTOH SEHARI-HARI:** Sambungkan dalil dengan masalah kehidupan modern (kantor, rumah tangga, medsos) agar pendengar merasa relate.
+                5. **DURASI/PANJANG:** Naskah harus PANJANG dan TUNTAS. Jabarkan setiap poin minimal dalam 2-3 paragraf. Jangan membuat poin-poin pendek (bullet points) yang kering. Ubah poin menjadi narasi bercerita.
                 
-                3. STRUKTUR OUTPUT:
-                   - Judul Kapital
-                   - Mukadimah (Arab & Arti)
-                   - Isi Materi (Poin-poin detail)
-                   - Penutup & Doa (Arab & Arti)
-                   - [DI BAGIAN PALING BAWAH]: Buat kotak "RANGKUMAN / POIN PENTING" untuk contekan penceramah.
+                STRUKTUR OUTPUT:
+                - Judul yang Menggugah
+                - Mukadimah Lengkap (Arab & Arti)
+                - Pembuka yang menarik perhatian (Hook)
+                - Isi Materi (Gabungan Dalil, Kisah Nabi, & Contoh Modern)
+                - Penutup & Kesimpulan
+                - Doa Penutup Lengkap (Arab & Arti)
+                - [BAGIAN AKHIR]: Kotak Rangkuman Singkat.
                 """
                 
                 prompt_user = f"""
-                Buatkan Naskah Dakwah.
+                Tolong buatkan materi dakwah yang sangat lengkap.
                 Topik: {tema}
-                Target: {target_audience}
+                Target Audiens: {target_audience}
                 Jenis: {format_output}
-                Panjang: Minimal {min_kata}.
-                {struktur_khusus}
+                
+                Instruksi Tambahan:
+                - Pastikan menyertakan minimal 2 Hadits Shahih lengkap dengan teks Arabnya.
+                - Ceritakan satu kisah Rasulullah SAW yang sangat menyentuh terkait topik ini secara detail.
+                - {struktur_wajib}
+                - Buat naskahnya terlihat profesional dan siap dibacakan di mimbar.
                 """
                 
                 chat_completion = client.chat.completions.create(
@@ -139,8 +147,8 @@ if st.button("✨ BUAT NASKAH LENGKAP ✨"):
                         {"role": "user", "content": prompt_user}
                     ],
                     model="llama-3.3-70b-versatile",
-                    temperature=0.7,
-                    max_tokens=6500, # Token maksimal biar naskah jumat gak putus
+                    temperature=0.7, # Kreativitas moderat agar luwes tapi tetap sesuai dalil
+                    max_tokens=7500, # Maksimum token agar naskah sangat panjang
                 )
                 
                 st.session_state.naskah_dakwah = chat_completion.choices[0].message.content
@@ -157,7 +165,7 @@ if "naskah_ready" in st.session_state and st.session_state.naskah_ready:
     <div class='disclaimer-box'>
         <span style='font-size: 1.5rem;'>⚠️</span>
         <div>
-            <strong>Disclaimer:</strong> Mohon koreksi kembali Teks Arab & Terjemahan sebelum disampaikan.
+            <strong>Disclaimer:</strong> Naskah ini disusun oleh AI. Mohon Ustadz/Khatib mengoreksi kembali Teks Arab & Terjemahan sebelum disampaikan di mimbar.
         </div>
     </div>
     """, unsafe_allow_html=True)
