@@ -1,11 +1,10 @@
 import streamlit as st
 from groq import Groq
-import datetime
 
 # --- 1. SETUP HALAMAN (Nuansa Islami Clean) ---
 st.set_page_config(page_title="Asisten Dakwah AI", page_icon="🕌", layout="centered")
 
-# --- 2. CSS & STYLE (Hijau & Emas - FIX UI) ---
+# --- 2. CSS & STYLE (Hijau & Emas) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Amiri&family=Poppins:wght@300;400;600;700&display=swap');
@@ -14,21 +13,15 @@ st.markdown("""
     .stApp { background-color: #F1F8E9; color: #1B5E20; }
     
     /* Typography */
-    h1 { font-family: 'Poppins', sans-serif; color: #1B5E20 !important; text-align: center; font-weight: 700; font-size: 2.5rem; margin-top: 20px; }
-    .subtitle { font-family: 'Poppins', sans-serif; font-size: 1rem; text-align: center; margin-bottom: 20px; color: #558B2F; }
+    h1 { font-family: 'Poppins', sans-serif; color: #1B5E20 !important; text-align: center; font-weight: 700; font-size: 2.5rem; margin-top: 10px; }
+    .subtitle { font-family: 'Poppins', sans-serif; font-size: 1rem; text-align: center; margin-bottom: 30px; color: #558B2F; }
     label { font-family: 'Poppins', sans-serif !important; color: #33691E !important; font-weight: 600 !important; }
 
-    /* Input Container (Card Style) */
-    .input-container {
-        background-color: white; padding: 25px; border-radius: 15px; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #DCEDC8;
-        margin-bottom: 20px;
-    }
-
-    /* Input Fields */
+    /* Input Fields Modification */
     .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {
-        border-radius: 10px !important; border: 1px solid #C5E1A5 !important;
-        background-color: #FAFAFA !important; color: #000000 !important;
+        background-color: #FAFAFA !important; 
+        color: #000000 !important;
+        border-radius: 8px !important;
     }
 
     /* Buttons */
@@ -50,10 +43,11 @@ st.markdown("""
         white-space: pre-wrap; /* Agar paragraf rapi */
     }
     
-    /* ARABIC TEXT STYLE (PENTING) */
+    /* ARABIC TEXT STYLE */
     .arab-text { 
-        font-family: 'Amiri', serif; font-size: 1.6rem; direction: rtl; 
-        color: #1B5E20; line-height: 2.2; margin: 15px 0; display: block; text-align: right;
+        font-family: 'Amiri', serif; font-size: 1.8rem; direction: rtl; 
+        color: #1B5E20; line-height: 2.2; margin: 20px 0; display: block; text-align: right;
+        background-color: #F9FBE7; padding: 10px 20px; border-radius: 10px; /* Sedikit highlight biar jelas */
     }
     
     /* Disclaimer Box */
@@ -75,11 +69,8 @@ try:
 except:
     api_key = st.text_input("Masukkan API Key Groq Anda:", type="password")
 
-# --- 5. INPUT FORM ---
-# Menggunakan container biasa tanpa HTML injection yang berlebihan biar gak ada blok putih aneh
-with st.container():
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    
+# --- 5. INPUT FORM (FIX: MENGGUNAKAN CONTAINER ASLI) ---
+with st.container(border=True): # Ini pengganti div manual tadi, otomatis bikin kotak rapi
     tema = st.text_input("📝 Tema Dakwah / Topik", placeholder="Contoh: Sabar Menghadapi Ujian, Keutamaan Sedekah Subuh...")
     
     col1, col2 = st.columns(2)
@@ -88,12 +79,9 @@ with st.container():
             ["Umum / Jamaah Masjid", "Anak Muda / Gen Z (Bahasa Santai)", "Perkantoran / Profesional", "Ibu-ibu Pengajian"], 
             index=0)
     with col2:
-        # Poin-poin ceramah SUDAH DIHAPUS dari sini
         format_output = st.selectbox("📄 Jenis Materi", 
             ["Kultum Singkat (7 Menit)", "Naskah Khutbah Jumat (Lengkap 20 Menit)", "Caption Sosmed (IG/TikTok)"], 
             index=0)
-            
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 6. LOGIKA GENERATE ---
 if st.button("✨ BUAT NASKAH LENGKAP ✨"):
@@ -106,49 +94,43 @@ if st.button("✨ BUAT NASKAH LENGKAP ✨"):
             client = Groq(api_key=api_key)
             with st.spinner('⏳ Sedang membuka kitab & menyusun naskah... (Mohon tunggu sebentar)'):
                 
-                # SETTING PANJANG KATA BERDASARKAN PILIHAN
-                min_kata = "800 kata" # Default Kultum
+                # SETTING PROMPT PANJANG
+                min_kata = "800 kata" 
                 struktur_khusus = ""
                 
                 if "Khutbah Jumat" in format_output:
-                    min_kata = "1500 sampai 2000 kata (Sangat Panjang)"
-                    struktur_khusus = "Wajib Format Khutbah Jumat Resmi (Khutbah Pertama + Khutbah Kedua + Doa Penutup)."
+                    min_kata = "2000 kata (Sangat Panjang & Detail)"
+                    struktur_khusus = "WAJIB STRUKTUR KHUTBAH JUMAT RESMI: Khutbah Pertama (Materi) -> Duduk Antara Dua Khutbah (Tanda Pemisah) -> Khutbah Kedua (Doa)."
                 elif "Caption" in format_output:
-                    min_kata = "150-200 kata"
-                    struktur_khusus = "Gaya bahasa caption menarik, gunakan bullet points dan hashtag."
+                    min_kata = "200 kata"
+                    struktur_khusus = "Gaya caption medsos yang engaging."
 
-                # SYSTEM PROMPT (OTAK USTADZ)
                 prompt_system = """
                 Anda adalah Ulama/Ustadz cerdas yang ahli menyusun naskah ceramah.
                 
-                ATURAN FORMAT (WAJIB DIPATUHI):
-                1. DALIL: Setiap mengutip Ayat Al-Quran atau Hadits, WAJIB menuliskan:
-                   - Teks Arab Asli (Gunakan Font Arabic UTF-8 yang benar).
-                   - Terjemahan Bahasa Indonesia.
-                   - Sumber (Nama Surat:Ayat atau Perawi Hadits).
+                ATURAN UTAMA:
+                1. DALIL: Setiap mengutip Ayat/Hadits, WAJIB format seperti ini:
+                   <div class='arab-text'>[TEKS ARAB]</div>
+                   **Artinya:** [TERJEMAHAN]
+                   *(HR/QS. [SUMBER])*
                 
-                2. PANJANG & KEDALAMAN: 
-                   - Jangan membuat naskah pendek! Bahas topik secara mendalam, runut, dan tuntas.
-                   - Gunakan analogi atau kisah inspiratif agar pendengar tidak bosan.
+                2. KEDALAMAN: Bahas tuntas, jangan kulitnya saja. Berikan contoh nyata kehidupan sehari-hari.
                 
                 3. STRUKTUR OUTPUT:
-                   - Judul (Kapital & Menarik).
-                   - Mukadimah (Salam, Hamdalah, Sholawat - Lengkap Arab & Arti).
-                   - Isi Materi (Bagi menjadi beberapa sub-poin yang detail).
-                   - Penutup & Doa.
-                   - [PENTING] Bagian Terakhir: Buat kotak "RANGKUMAN / POIN PENTING" untuk catatan penceramah.
+                   - Judul Kapital
+                   - Mukadimah (Arab & Arti)
+                   - Isi Materi (Poin-poin detail)
+                   - Penutup & Doa (Arab & Arti)
+                   - [DI BAGIAN PALING BAWAH]: Buat kotak "RANGKUMAN / POIN PENTING" untuk contekan penceramah.
                 """
                 
                 prompt_user = f"""
                 Buatkan Naskah Dakwah.
                 Topik: {tema}
-                Target Audiens: {target_audience}
+                Target: {target_audience}
                 Jenis: {format_output}
-                
-                Instruksi Khusus:
-                - Panjang Naskah: Minimal {min_kata}.
-                - {struktur_khusus}
-                - Gunakan tag HTML <div class='arab-text'>...teks arab...</div> untuk setiap teks Arab agar tampilannya rapi kanan-kiri.
+                Panjang: Minimal {min_kata}.
+                {struktur_khusus}
                 """
                 
                 chat_completion = client.chat.completions.create(
@@ -158,11 +140,10 @@ if st.button("✨ BUAT NASKAH LENGKAP ✨"):
                     ],
                     model="llama-3.3-70b-versatile",
                     temperature=0.7,
-                    max_tokens=6000, # Diperbesar agar naskah tidak terpotong
+                    max_tokens=6500, # Token maksimal biar naskah jumat gak putus
                 )
                 
-                result_text = chat_completion.choices[0].message.content
-                st.session_state.naskah_dakwah = result_text
+                st.session_state.naskah_dakwah = chat_completion.choices[0].message.content
                 st.session_state.naskah_ready = True
                 
         except Exception as e:
@@ -172,7 +153,6 @@ if st.button("✨ BUAT NASKAH LENGKAP ✨"):
 if "naskah_ready" in st.session_state and st.session_state.naskah_ready:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # DISCLAIMER
     st.markdown("""
     <div class='disclaimer-box'>
         <span style='font-size: 1.5rem;'>⚠️</span>
@@ -182,8 +162,7 @@ if "naskah_ready" in st.session_state and st.session_state.naskah_ready:
     </div>
     """, unsafe_allow_html=True)
     
-    # KOTAK NASKAH
-    # Note: unsafe_allow_html=True diaktifkan agar tag <div class='arab-text'> dari AI bisa dirender jadi font Arab yang bagus
+    # RENDER HASIL
     st.markdown(f"<div class='kertas-naskah'>{st.session_state.naskah_dakwah}</div>", unsafe_allow_html=True)
     
     st.markdown("---")
