@@ -117,4 +117,9 @@ with col_input1:
 with col_input2:
     with st.container():
         st.markdown("### 📝 Topik Bahasan")
-        tema = st.text_input("Tema Spesifik", placeholder="Contoh: Meneladani Kesabaran Nabi Ay
+with col_input2:
+    with st.container():
+        st.markdown("### 📝 Topik Bahasan")
+        # PERHATIKAN: Baris di bawah ini harus satu baris panjang, jangan diputus!
+        tema = st.text_input("Tema Spesifik", placeholder="Contoh: Meneladani Kesabaran Nabi Ayub dalam Menghadapi Kebangkrutan...", help="Topik yang spesifik menghasilkan naskah yang lebih tajam.")
+        st.info("💡 **Tips:** Sistem akan melakukan 3x proses penulisan bertahap untuk memastikan naskah panjang dan tidak terpotong.")
